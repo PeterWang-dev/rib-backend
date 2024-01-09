@@ -51,13 +51,11 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(User::PhoneNumber)
                             .string()
-                            .not_null()
                             .unique_key(),
                     )
                     .col(
                         ColumnDef::new(User::EmailAddress)
                             .string()
-                            .not_null()
                             .unique_key(),
                     )
                     .col(
@@ -95,7 +93,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Book::BorrowedBy).integer())
                     .col(ColumnDef::new(Book::BorrowedDate).date_time())
                     .col(ColumnDef::new(Book::ReturnDate).date_time())
-                    .col(ColumnDef::new(Book::IsRenewed).boolean())
+                    .col(ColumnDef::new(Book::IsRenewed).boolean().not_null().default(false))
                     .foreign_key(
                         ForeignKey::create()
                             .name("FK_book_user")

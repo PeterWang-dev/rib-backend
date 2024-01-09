@@ -10,12 +10,11 @@ pub struct Model {
     pub password: String,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
-    pub birthday: Option<DateTimeLocal>,
+    pub birthday: Option<String>,
     pub address: Option<String>,
-    pub phone_number: String,
-    pub email_address: String,
-    #[sea_orm(default = "Expr::current_time()")]
-    pub registration_time: DateTimeLocal,
+    pub phone_number: Option<String>,
+    pub email_address: Option<String>,
+    pub registration_time: String,
     pub role_id: i32,
 }
 

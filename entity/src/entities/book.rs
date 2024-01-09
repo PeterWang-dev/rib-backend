@@ -10,13 +10,13 @@ pub struct Model {
     pub title: String,
     pub author: String,
     pub publisher: String,
-    pub published_time: DateTimeLocal,
+    pub published_time: String,
     pub category: String,
     pub isbn: String,
     pub borrowed_by: Option<i32>,
-    pub borrowed_date: Option<DateTimeLocal>,
-    pub return_date: Option<DateTimeLocal>,
-    pub is_renewed: Option<bool>,
+    pub borrowed_date: Option<String>,
+    pub return_date: Option<String>,
+    pub is_renewed: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
