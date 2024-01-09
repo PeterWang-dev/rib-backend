@@ -1,13 +1,25 @@
 [package]
-name = "rib-server"
-version = "0.1.0"
+name = "rib-backend"
+version = "0.0.1"
+authors = ["Peter Wang (github.com/PeterWang-dev)"]
 edition = "2021"
+description = "A Backend for the Ribrarian."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[workspace]
+members = [".", "migration"]
+
 [dependencies]
-actix-web = "4.4.1"
-env_logger = "0.10.1"
+chrono = "0.4.31"
 log = "0.4.20"
-serde = "1.0.193"
-uuid = "1.6.1"
+migration = { version = "0.1.0", path = "migration" }
+num = "0.4.1"
+num-derive = "0.4.1"
+num-traits = "0.2.17"
+sea-orm = { version = "0.12.10", features = ["sqlx-sqlite", "runtime-tokio-native-tls", "macros", "with-uuid", "with-chrono"] }
+sea-orm-migration = { version = "0.12.10" }
+serde = "1.0.195"
+serial_test = "3.0.0"
+tokio = { version = "1.35.1", features = ["full"] }
+uuid = { version = "1.6.1", features = ["v4", "fast-rng", "macro-diagnostics"] }

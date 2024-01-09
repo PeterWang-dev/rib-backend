@@ -1,13 +1,11 @@
 use crate::{
-    state::State,
-    entity::{prelude::*, privilege},
     error::{Error as RibError, InitializeError::*, Result as RibResult},
+    state::State,
 };
-use log::{error, info, trace, warn};
-use sea_orm::{
-    ActiveValue, ConnectOptions, ConnectionTrait, Database, DbConn, DbErr, EntityTrait, Schema,
-};
-use std::{env, fs::File, io::ErrorKind, str::FromStr};
+use log::{error, info, warn};
+use migration::{Migrator, MigratorTrait};
+use sea_orm::{ConnectOptions, Database, DbConn, DbErr};
+use std::{env, fs::File, io::ErrorKind, ptr::null, str::FromStr};
 
 const DATABASE_PATH: &str = "rib-db.sqlite3";
 
@@ -37,10 +35,9 @@ pub async fn initialize() -> RibResult<State> {
 }
 
 pub async fn setup(
+    admin_phone: Option<String>,
+    admin_email: Option<String>,
     admin_password: String,
-    first_name: String,
-    last_name: String,
-    phone_number: String,
 ) -> RibResult<State> {
     info!("Ribrarian Backend Hello! Assumed first run, setting up...");
 
@@ -57,7 +54,13 @@ pub async fn setup(
         return Err(RibError::InitializeError(SchemaCreateError(err)));
     }
 
-    if let Err(err) = create_admin(admin_password, first_name, last_name, phone_number).await {
+    if let Err(err) = create_admin(
+        admin_password,
+        admin_phone.as_ref().map(|s| s.as_str()),
+        admin_email.as_ref().map(|s| s.as_str()),
+    )
+    .await
+    {
         error!("Failed to create Administrator: {}", err);
         return Err(RibError::InitializeError(PrivilegeInitializeError(err)));
     }
@@ -108,66 +111,24 @@ async fn create_database() -> Result<DbConn, DbErr> {
 }
 
 async fn crate_schema(db_conn: &DbConn) -> Result<(), DbErr> {
-    info!("Creating tables...");
+    info!("Creating and initializing tables...");
 
-    let builder = db_conn.get_database_backend();
-    let schema = Schema::new(builder);
-
-    trace!("Builder: {:#?}\nSchema: {:#?}", builder, schema);
-
-    let statements = vec![
-        builder.build(&schema.create_table_from_entity(Privilege)),
-        builder.build(&schema.create_table_from_entity(User)),
-        builder.build(&schema.create_table_from_entity(Book)),
-    ];
-
-    for statement in statements {
-        trace!("Executing statement: {}", statement);
-
-        if let Err(err) = db_conn.execute(statement).await {
-            warn!("Failed to execute statement: {}", err);
-            return Err(err);
+    match Migrator::up(db_conn, Some(1)).await {
+        Ok(_) => {
+            info!("Tables created and initialized successfully.");
+            Ok(())
+        }
+        Err(e) => {
+            warn!("Failed to create and initialize tables: {}", e);
+            return Err(e);
         }
     }
-
-    info!("Tables created successfully.");
-
-    info!("Initializing privileges...");
-
-    let privileges = vec![
-        privilege::ActiveModel {
-            id: ActiveValue::set(0),
-            description: ActiveValue::set("Administrator".to_owned()),
-        },
-        privilege::ActiveModel {
-            id: ActiveValue::set(1),
-            description: ActiveValue::set("Librarian".to_owned()),
-        },
-        privilege::ActiveModel {
-            id: ActiveValue::set(2),
-            description: ActiveValue::set("Reader".to_owned()),
-        },
-    ];
-
-    for privilege in privileges {
-        trace!("Inserting privilege: {:#?}", privilege);
-
-        if let Err(err) = Privilege::insert(privilege).exec(db_conn).await {
-            warn!("Failed to insert privilege: {}", err);
-            return Err(err);
-        }
-    }
-
-    info!("Privileges initialized successfully.");
-
-    Ok(())
 }
 
 async fn create_admin(
     password: String,
-    first_name: String,
-    last_name: String,
-    phone_number: String,
+    phone: Option<&str>,
+    email: Option<&str>,
 ) -> Result<(), DbErr> {
     info!("Creating Administrator...");
 
@@ -199,9 +160,26 @@ mod intergrated_test {
 
     #[tokio::test]
     #[serial]
-    async fn first_run() {}
-
-    #[tokio::test]
-    #[serial]
-    async fn next_run() {}
+    async fn test() {
+        let state = match initialize().await {
+            Ok(state) => state,
+            Err(RibError::FirstRun) => {
+                match setup(
+                    Some("18471776321".to_owned()),
+                    None,
+                    "test@123".to_owned(),
+                )
+                .await
+                {
+                    Ok(state) => state,
+                    Err(e) => {
+                        panic!("Failed to setup: {:?}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                panic!("Failed to initialize: {:?}", e);
+            }
+        };
+    }
 }
