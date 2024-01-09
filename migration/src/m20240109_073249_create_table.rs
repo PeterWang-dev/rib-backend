@@ -46,14 +46,14 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::Password).string().not_null())
                     .col(ColumnDef::new(User::FirstName).string())
                     .col(ColumnDef::new(User::LastName).string())
+                    .col(ColumnDef::new(User::Birthday).date())
+                    .col(ColumnDef::new(User::Address).string())
                     .col(
                         ColumnDef::new(User::PhoneNumber)
                             .string()
                             .not_null()
                             .unique_key(),
                     )
-                    .col(ColumnDef::new(User::Birthday).date())
-                    .col(ColumnDef::new(User::Address).string())
                     .col(
                         ColumnDef::new(User::EmailAddress)
                             .string()
@@ -66,11 +66,11 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .default(Expr::current_time()),
                     )
-                    .col(ColumnDef::new(User::Role).string().not_null())
+                    .col(ColumnDef::new(User::RoleId).integer().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("FK_user_privilege")
-                            .from(User::Table, User::Role)
+                            .from(User::Table, User::RoleId)
                             .to(Privilege::Table, Privilege::Id)
                             .on_update(ForeignKeyAction::Cascade)
                             .on_delete(ForeignKeyAction::Cascade),
@@ -193,7 +193,7 @@ enum User {
     Address,
     EmailAddress,
     RegistrationTime,
-    Role,
+    RoleId,
 }
 
 // #[derive(DeriveIden)]
