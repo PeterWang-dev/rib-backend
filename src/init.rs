@@ -1,11 +1,12 @@
 use crate::{
     error::{Error as RibError, InitializeError::*, Result as RibResult},
     state::State,
+    user::{self, UserBuilder, UserIdentifier},
 };
 use log::{error, info, warn};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{ConnectOptions, Database, DbConn, DbErr};
-use std::{env, fs::File, io::ErrorKind, ptr::null, str::FromStr};
+use std::{env, fs::File, io::ErrorKind, str::FromStr};
 
 const DATABASE_PATH: &str = "rib-db.sqlite3";
 
@@ -34,11 +35,7 @@ pub async fn initialize() -> RibResult<State> {
     }
 }
 
-pub async fn setup(
-    admin_phone: Option<String>,
-    admin_email: Option<String>,
-    admin_password: String,
-) -> RibResult<State> {
+pub async fn setup(admin_identifier: UserIdentifier, admin_password: String) -> RibResult<State> {
     info!("Ribrarian Backend Hello! Assumed first run, setting up...");
 
     let db_conn = match create_database().await {
@@ -54,15 +51,9 @@ pub async fn setup(
         return Err(RibError::InitializeError(SchemaCreateError(err)));
     }
 
-    if let Err(err) = create_admin(
-        admin_password,
-        admin_phone.as_ref().map(|s| s.as_str()),
-        admin_email.as_ref().map(|s| s.as_str()),
-    )
-    .await
-    {
-        error!("Failed to create Administrator: {}", err);
-        return Err(RibError::InitializeError(PrivilegeInitializeError(err)));
+    if let Err(err) = create_admin(&db_conn, &admin_identifier, &admin_password).await {
+        error!("Failed to create Administrator: {:#?}", err);
+        return Err(err);
     }
 
     info!("Setup completed successfully.");
@@ -126,13 +117,24 @@ async fn crate_schema(db_conn: &DbConn) -> Result<(), DbErr> {
 }
 
 async fn create_admin(
-    password: String,
-    phone: Option<&str>,
-    email: Option<&str>,
-) -> Result<(), DbErr> {
+    db_conn: &DbConn,
+    identifier: &UserIdentifier,
+    password: &str,
+) -> Result<(), RibError> {
     info!("Creating Administrator...");
 
-    todo!("create_admin");
+    let builder = UserBuilder::new(identifier.clone(), password.to_owned(), 1);
+
+    match user::create_user(db_conn, builder).await {
+        Ok(_) => {
+            info!("Administrator created successfully.");
+            Ok(())
+        }
+        Err(e) => {
+            warn!("Failed to create Administrator: {:#?}", e);
+            Err(e)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -165,8 +167,7 @@ mod intergrated_test {
             Ok(state) => state,
             Err(RibError::FirstRun) => {
                 match setup(
-                    Some("18471776321".to_owned()),
-                    None,
+                    UserIdentifier::PhoneNumber("18471776321".to_owned()),
                     "test@123".to_owned(),
                 )
                 .await

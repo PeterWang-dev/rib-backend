@@ -1,2 +1,2 @@
-# rib-server
-The Backend Server of Ribrarian.
+# rib-backend
+A Backend for the Ribrarian.
