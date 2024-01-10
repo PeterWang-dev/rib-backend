@@ -121,24 +121,24 @@ impl MigrationTrait for Migration {
             builder,
             r#"
             CREATE VIEW
-                `borrow_view` (
-                    `user_id`,
-                    `book_id`,
-                    `book_title`,
-                    `borrow_date`,
-                    `return_date`,
-                    `is_renewed`
+                "borrow_view" (
+                    "user_id",
+                    "book_uuid",
+                    "book_title",
+                    "borrow_date",
+                    "return_date",
+                    "is_renewed"
                 ) AS
             SELECT
-                `id`,
-                `uuid`,
-                `title`,
-                `borrowed_date`,
-                `return_date`,
-                `is_renewed`
+                "id",
+                "uuid",
+                "title",
+                "borrowed_date",
+                "return_date",
+                "is_renewed"
             FROM
-                `user`
-                NATURAL JOIN `book`;"#,
+                "user"
+                NATURAL JOIN "book";"#,
             [],
         );
 
