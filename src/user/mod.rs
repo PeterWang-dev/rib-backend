@@ -1,4 +1,9 @@
-pub mod crud;
+mod crud;
+
+pub use crud::{
+    create as create_user, delete as delete_user, read_by_id as read_user,
+    read_by_identifier as read_user_by_identifier, update as update_user,
+};
 
 use entity::user::{ActiveModel, Model};
 use sea_orm::{prelude::DateTimeLocal, ActiveValue, IntoActiveModel};

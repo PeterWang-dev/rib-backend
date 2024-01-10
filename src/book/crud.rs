@@ -6,14 +6,14 @@ use crate::error::{
 use entity::book::{Model, Entity};
 use sea_orm::{DbConn, EntityTrait};
 
-pub async fn insert(db: &DbConn, book_builder: BookBuilder) -> Result<Uuid> {
+pub async fn create(db: &DbConn, book_builder: BookBuilder) -> Result<Uuid> {
     match Entity::insert(book_builder.model).exec(db).await {
         Ok(book) => Ok(Uuid::parse_str(book.last_insert_id.as_str()).unwrap()),
         Err(e) => Err(DatabaseError(e)),
     }
 }
 
-pub async fn read_by_identifier(db: &DbConn, uuid: Uuid) -> Result<Model> {
+pub async fn read_by_identifier(db: &DbConn, uuid: &Uuid) -> Result<Model> {
     match Entity::find_by_id(uuid.to_string()).one(db).await {
         Ok(Some(book)) => Ok(book),
         Ok(None) => Err(OperationError(OpErr::ObjectNotFound)),
@@ -21,7 +21,7 @@ pub async fn read_by_identifier(db: &DbConn, uuid: Uuid) -> Result<Model> {
     }
 }
 
-pub async fn update(db: &DbConn, uuid: Uuid, book_builder: BookBuilder) -> Result<()> {
+pub async fn update(db: &DbConn, uuid: &Uuid, book_builder: BookBuilder) -> Result<()> {
     let book = read_by_identifier(db, uuid).await?;
     let mut new_model = book_builder.model;
     new_model.uuid = ActiveValue::Set(book.uuid);
@@ -32,7 +32,7 @@ pub async fn update(db: &DbConn, uuid: Uuid, book_builder: BookBuilder) -> Resul
     }
 }
 
-pub async fn delete(db: &DbConn, uuid: Uuid) -> Result<u64> {
+pub async fn delete(db: &DbConn, uuid: &Uuid) -> Result<u64> {
     match Entity::delete_by_id(uuid.to_string()).exec(db).await {
         Ok(res) => Ok(res.rows_affected),
         Err(e) => Err(DatabaseError(e)),

@@ -1,10 +1,14 @@
-pub mod crud;
+mod crud;
 
-use std::str::FromStr;
+pub use crud::{
+    create as create_book, delete as delete_book, read_by_identifier as read_book,
+    update as update_book,
+};
 
 use chrono::{Duration, Local};
-use entity::book::ActiveModel;
-use sea_orm::{prelude::DateTimeLocal, ActiveValue, TryIntoModel};
+use entity::book::{ActiveModel, Model};
+use sea_orm::{prelude::DateTimeLocal, ActiveValue, IntoActiveModel, TryIntoModel};
+use std::str::FromStr;
 use uuid::Uuid;
 
 pub struct BookBuilder {
@@ -31,6 +35,12 @@ impl BookBuilder {
                 isbn: ActiveValue::Set(isbn),
                 ..Default::default()
             },
+        }
+    }
+
+    pub fn from_model(model: Model) -> Self {
+        Self {
+            model: model.into_active_model(),
         }
     }
 
@@ -70,12 +80,7 @@ impl BookBuilder {
 
     pub fn set_renewed(&mut self) {
         let model = &mut self.model;
-        let old_ret = model
-            .clone()
-            .try_into_model()
-            .unwrap()
-            .return_date
-            .unwrap();
+        let old_ret = model.clone().try_into_model().unwrap().return_date.unwrap();
         let old_ret = DateTimeLocal::from_str(&old_ret).unwrap();
         let ret = old_ret + Duration::days(30);
 

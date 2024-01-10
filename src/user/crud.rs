@@ -6,14 +6,14 @@ use crate::error::{
 use entity::user::{self, Entity, Model};
 use sea_orm::{ColumnTrait, DbConn, EntityTrait, QueryFilter};
 
-pub async fn insert(db: &DbConn, user_builder: UserBuilder) -> Result<i32> {
+pub async fn create(db: &DbConn, user_builder: UserBuilder) -> Result<i32> {
     match Entity::insert(user_builder.active_model).exec(db).await {
         Ok(user) => Ok(user.last_insert_id),
         Err(e) => Err(DatabaseError(e)),
     }
 }
 
-pub async fn read_by_identifier(db: &DbConn, identifier: UserIdentifier) -> Result<Model> {
+pub async fn read_by_identifier(db: &DbConn, identifier: &UserIdentifier) -> Result<Model> {
     let res = match identifier {
         UserIdentifier::PhoneNumber(phone_number) => read_by_phone(db, &phone_number).await,
         UserIdentifier::EmailAddress(email_address) => read_by_email(db, &email_address).await,
