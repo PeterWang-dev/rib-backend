@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[derive(Debug, FromQueryResult)]
 pub struct Model {
     pub user_id: i32,
-    pub book_uuid: Uuid,
+    pub book_uuid: String,
     pub book_title: String,
     pub borrow_date: DateTimeLocal,
     pub return_date: DateTimeLocal,

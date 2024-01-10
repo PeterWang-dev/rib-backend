@@ -62,7 +62,7 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(User::RegistrationTime)
                             .date_time()
                             .not_null()
-                            .default(Expr::current_time()),
+                            .default(Expr::current_timestamp()),
                     )
                     .col(ColumnDef::new(User::RoleId).integer().not_null())
                     .foreign_key(
@@ -137,8 +137,10 @@ impl MigrationTrait for Migration {
                 "return_date",
                 "is_renewed"
             FROM
-                "user"
-                NATURAL JOIN "book";"#,
+                "user",
+                "book"
+            WHERE
+                "id" = "borrowed_by";"#,
             [],
         );
 

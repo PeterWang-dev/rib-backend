@@ -1,12 +1,14 @@
 mod crud;
 
+use chrono::NaiveDate;
 pub use crud::{
     create as create_user, delete as delete_user, read_by_id as read_user,
     read_by_identifier as read_user_by_identifier, update as update_user,
 };
+pub use entity::user::Model as User;
 
 use entity::user::{ActiveModel, Model};
-use sea_orm::{prelude::DateTimeLocal, ActiveValue, IntoActiveModel};
+use sea_orm::{ActiveValue, IntoActiveModel};
 
 #[derive(Clone, Debug)]
 pub enum UserIdentifier {
@@ -56,7 +58,7 @@ impl UserBuilder {
         self.active_model.last_name = ActiveValue::Set(Some(last_name));
     }
 
-    pub fn set_birthday(&mut self, birthday: DateTimeLocal) {
+    pub fn set_birthday(&mut self, birthday: NaiveDate) {
         self.active_model.birthday = ActiveValue::Set(Some(birthday.to_string()));
     }
 

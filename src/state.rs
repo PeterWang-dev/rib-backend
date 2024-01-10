@@ -7,7 +7,7 @@ use crate::{
 };
 use sea_orm::DbConn;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Role {
     Administrator = 1,
     Librarian = 2,
@@ -47,7 +47,7 @@ impl State {
         }
     }
 
-    pub async fn set_login(&mut self, identifier: &UserIdentifier, password: String) -> Result<()> {
+    pub async fn set_login(&mut self, identifier: &UserIdentifier, password: &str) -> Result<()> {
         let conn = &self.db_conn;
         let (user_id, role) = match user::read_user_by_identifier(conn, &identifier).await {
             Ok(user) => {

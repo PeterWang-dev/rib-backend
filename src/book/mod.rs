@@ -4,8 +4,9 @@ pub use crud::{
     create as create_book, delete as delete_book, read_by_identifier as read_book,
     update as update_book,
 };
+pub use entity::book::Model as Book;
 
-use chrono::{Duration, Local};
+use chrono::{Duration, Local, NaiveDate};
 use entity::book::{ActiveModel, Model};
 use sea_orm::{prelude::DateTimeLocal, ActiveValue, IntoActiveModel, TryIntoModel};
 use std::str::FromStr;
@@ -20,7 +21,7 @@ impl BookBuilder {
         title: String,
         author: String,
         publisher: String,
-        published_time: DateTimeLocal,
+        published_time: NaiveDate,
         category: String,
         isbn: String,
     ) -> Self {
@@ -56,7 +57,7 @@ impl BookBuilder {
         self.model.publisher = ActiveValue::Set(publisher);
     }
 
-    pub fn set_published_time(&mut self, published_time: DateTimeLocal) {
+    pub fn set_published_time(&mut self, published_time: NaiveDate) {
         self.model.published_time = ActiveValue::Set(published_time.to_string());
     }
 
